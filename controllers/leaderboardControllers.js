@@ -28,11 +28,14 @@ async function uploadTeams(req, res) {
 
         // 3. Esperamos a que todas las imágenes se suban
         const cloudinaryResults = await Promise.all(uploadPromises);
-        const teamData={
-            team: req.body.team,
-            stadium: req.body.stadium,
-            images: cloudinaryResults.map(img => img.secure_url) // Solo guardamos las URLs de las imágenes
-        }
+       const teams = Array.isArray(req.body.team) ? req.body.team : [req.body.team];
+const stadiums = Array.isArray(req.body.stadium) ? req.body.stadium : [req.body.stadium];
+
+const teamData = {
+    team: teams,
+    stadium: stadiums,
+    images: cloudinaryResults.map(img => img.secure_url)
+};
         console.log('Datos del equipo a insertar en DB:', teamData);
         var pool = await connectSQLServer();
     const result= await Promise.all(
