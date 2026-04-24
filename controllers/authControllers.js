@@ -68,6 +68,7 @@ res.cookie('token', token, {
 
 return res.status(200).json({
   message: 'Login successful',
+    token,
   user: { username: user.username }
   // ❌ NO envíes el token en el body si ya va en cookie
 });
