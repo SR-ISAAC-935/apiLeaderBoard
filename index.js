@@ -2,9 +2,19 @@ const express = require('express');
 const cors = require('cors'); // 👈 IMPORTANTE
 const app = express();
 
-// 🔥 CONFIGURACIÓN CORS
+const allowedOrigins = [
+  'http://localhost:5173'   // dev
+];
+
 app.use(cors({
-    origin: '*', // permite todos (dev)
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
 }));
 
 app.use(express.json()); 
