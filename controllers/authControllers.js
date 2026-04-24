@@ -57,13 +57,20 @@ const getUser = async (req, res) => {
         }
 
         // 🔥 generar token correctamente
-        const token = createTokenSesion(username);
-        res.cookie('token', token, { httpOnly: true, secure: true, sameSite: 'Strict' });
-        return res.status(200).json({
-            message: 'Login successful',
-            token,
-            user: { username: user.username }
-        });
+       const token = createTokenSesion(username);
+
+res.cookie('token', token, { 
+  httpOnly: true,     // JS del frontend NO puede leerla (protege de XSS)
+  secure: true,       // Solo HTTPS
+  sameSite: 'Strict', // Protege de CSRF
+  maxAge: 24 * 60 * 60 * 1000 // 1 día en ms (importante agregarlo!)
+});
+
+return res.status(200).json({
+  message: 'Login successful',
+  user: { username: user.username }
+  // ❌ NO envíes el token en el body si ya va en cookie
+});
 
     } catch (error) {
         console.error('Error fetching user:', error.message);
