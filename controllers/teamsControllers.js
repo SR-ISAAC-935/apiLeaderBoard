@@ -1,4 +1,4 @@
-const {connectSQLServer ,mssql}= require('../DB/databaseConfig');
+const { connectSQLServer, mssql } = require('../DB/databaseConfig');
 // En tu backend, donde está el getTeams
 async function getTeams(req, res) {
     try {
@@ -20,17 +20,17 @@ async function getTeams(req, res) {
         return res.status(500).json({ message: error.message });
     }
 }
-async function getMatchesPlayed(req,res){
+async function getMatchesPlayed(req, res) {
 
     try {
-        const pool=await connectSQLServer();
-        const result= await pool.request().query('select id, club_name from clubs left join matches on home_club_id, away_club_id where home_club_id=id  ')
+        const pool = await connectSQLServer();
+        const result = await pool.request().query('select id, club_name from clubs left join matches on home_club_id, away_club_id where home_club_id=id  ')
     } catch (error) {
-        
+
     }
 }
 async function createMatchPlayed(req, res) {
-  
+
     try {
         // ✅ season_id y journey vienen UNA SOLA VEZ, no por partido
         const { season_id, journey, partidos } = req.body;
@@ -48,13 +48,13 @@ async function createMatchPlayed(req, res) {
         for (let i = 0; i < partidos.length; i++) {
             const p = partidos[i];
             if (!p.home_club_id || !p.away_club_id || !p.match_date) {
-                return res.status(400).json({ 
-                    message: `Partido ${i + 1} tiene datos incompletos` 
+                return res.status(400).json({
+                    message: `Partido ${i + 1} tiene datos incompletos`
                 });
             }
             if (p.home_club_id === p.away_club_id) {
-                return res.status(400).json({ 
-                    message: `Partido ${i + 1}: el local y visitante no pueden ser el mismo equipo` 
+                return res.status(400).json({
+                    message: `Partido ${i + 1}: el local y visitante no pueden ser el mismo equipo`
                 });
             }
         }
@@ -63,8 +63,8 @@ async function createMatchPlayed(req, res) {
 
         // ✅ Paso 1: Crear jornada si no existe y obtener su ID
         const jornadaResult = await pool.request()
-            .input('journey',    mssql.Int,         journey)
-            .input('season_id',  mssql.Int,          season_id)
+            .input('journey', mssql.Int, journey)
+            .input('season_id', mssql.Int, season_id)
             .query(`
                 IF NOT EXISTS (
                     SELECT 1 FROM dbo.jorney_season 
@@ -81,13 +81,13 @@ async function createMatchPlayed(req, res) {
         console.log("Jornada ID:", journey_id);
 
         // ✅ Paso 2: Construir JSON con el journey_id ya resuelto
-            const matchesData = partidos.map(p => ({
+        const matchesData = partidos.map(p => ({
             home_club_id: p.home_club_id,
             away_club_id: p.away_club_id,
-            home_score:   p.home_score  ?? 0,
-            away_score:   p.away_score  ?? 0,
-            match_date:   p.match_date  || null,
-            journey:      journey_id        // ✅ ID real de jorney_season
+            home_score: p.home_score ?? null,    // ✅ NULL si no existe
+            away_score: p.away_score ?? null,    // ✅ NULL si no existe
+            match_date: p.match_date || null,
+            journey: journey_id
         }));
 
         console.log("Partidos a insertar:", matchesData);
@@ -97,8 +97,8 @@ async function createMatchPlayed(req, res) {
             .input('MatchesData', mssql.NVarChar(mssql.MAX), JSON.stringify(matchesData))
             .execute('sp_InsertMatches');
 
-        return res.status(200).json({ 
-            message: `Jornada ${journey} guardada con ${partidos.length} partidos ✅ ${matchesData}`,
+        return res.status(200).json({
+            message: `Jornada ${journey} guardada con ${partidos.length} partidos ✅`,
         });
 
     } catch (error) {
@@ -107,7 +107,7 @@ async function createMatchPlayed(req, res) {
     }
 }
 
-module.exports={
+module.exports = {
     getTeams,
     createMatchPlayed,
 }
