@@ -20,6 +20,7 @@ async function getTeams(req, res) {
         return res.status(500).json({ message: error.message });
     }
 }
+
 async function getMatchesPlayed(req, res) {
 
     try {

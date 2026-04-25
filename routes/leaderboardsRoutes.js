@@ -4,7 +4,7 @@ const router = express.Router();
 const { tokenTrueFalse } = require('../middleware/checkToken');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
-const {getTeams, createMatchPlayed}= require('../controllers/teamsControllers')
+const { createMatchPlayed, getTeams}= require('../controllers/teamsControllers')
 
 router.get('/', tokenTrueFalse, (req, res) => {
     res.json({ message: `Welcome to the leaderboard, ${req.user}!` });
