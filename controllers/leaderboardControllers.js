@@ -4,14 +4,13 @@ const { cloudinary } = require('../Helpers/cloudinaryHelper');
 async function uploadTeams(req, res) {
     try {
         const files = req.files;
-
         console.log('Archivos recibidos:', files?.length);
 
         if (!files || files.length === 0) {
             return res.status(400).json({ message: 'No se recibieron imágenes' });
         }
 
-        // 🔥 Subir imágenes a Cloudinary
+        // ✅ CORREGIDO: files.map() directo, no [files.map](...)
         const uploadPromises = files.map(file => {
             return new Promise((resolve, reject) => {
                 const stream = cloudinary.uploader.upload_stream(
@@ -30,7 +29,7 @@ async function uploadTeams(req, res) {
 
         const cloudinaryResults = await Promise.all(uploadPromises);
 
-        // 🔥 Normalizar datos (1 o varios)
+        // ✅ CORREGIDO: req.body.team directo, no [req.body.team](...)
         const teams = Array.isArray(req.body.team)
             ? req.body.team
             : [req.body.team];
@@ -44,7 +43,6 @@ async function uploadTeams(req, res) {
         console.log("FILES:", files.length);
         console.log("UPLOADS:", cloudinaryResults.length);
 
-        // ❗ VALIDACIÓN CRÍTICA
         if (
             teams.length !== stadiums.length ||
             teams.length !== cloudinaryResults.length
@@ -54,12 +52,11 @@ async function uploadTeams(req, res) {
             });
         }
 
-        // 🔥 Construir JSON para SP
+        // ✅ CORREGIDO: teams.map() directo
         const dataForSP = teams.map((team, i) => {
             if (!team || !stadiums[i] || !cloudinaryResults[i]) {
                 throw new Error(`Datos incompletos en índice ${i}`);
             }
-
             return {
                 club: team,
                 stadium: stadiums[i],
@@ -68,27 +65,24 @@ async function uploadTeams(req, res) {
         });
 
         const jsonData = JSON.stringify(dataForSP);
-
         console.log("JSON para SP:", jsonData);
 
-        // 🔥 Ejecutar Stored Procedure
         const pool = await connectSQLServer();
-
         await pool.request()
             .input('StadiumClubs', mssql.NVarChar(mssql.MAX), jsonData)
             .execute('sp_InsertStadiumsAndClubs');
 
-        // ✅ UNA SOLA RESPUESTA (fix del 500)
         return res.status(200).json({
             message: 'Equipos y estadios guardados correctamente 🚀'
         });
 
     } catch (error) {
         console.error('🔥 ERROR REAL:', error);
-
         return res.status(500).json({
             message: 'Error al procesar los equipos',
             error: error.message
         });
     }
 }
+
+module.exports = { uploadTeams };
