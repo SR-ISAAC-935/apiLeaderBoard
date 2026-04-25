@@ -1,4 +1,4 @@
-const { connectSQLServer, mssql } = require('../database');
+const { connectSQLServer, mssql } = require('../DB/databaseConfig');
 
 // seasonController.js
 
