@@ -98,7 +98,7 @@ async function createMatchPlayed(req, res) {
             .execute('sp_InsertMatches');
 
         return res.status(200).json({ 
-            message: `Jornada ${journey} guardada con ${partidos.length} partidos ✅` 
+            message: `Jornada ${journey} guardada con ${partidos.length} partidos ✅ ${matchesData}` 
         });
 
     } catch (error) {
