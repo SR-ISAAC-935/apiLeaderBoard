@@ -15,6 +15,6 @@ router.post(
     upload.array('images'),            // 'images' debe coincidir con formData.append("images", ...)
     uploadTeams
 );
-router.post('/matches-today', tokenTrueFalse, createMatchPlayed);
+router.post('/create-matches', tokenTrueFalse, createMatchPlayed);
 router.get('/getTeams',tokenTrueFalse,getTeams)
 module.exports = router;
