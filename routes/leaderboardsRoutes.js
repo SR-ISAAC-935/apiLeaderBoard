@@ -11,7 +11,7 @@ router.get('/', tokenTrueFalse, (req, res) => {
 });
 router.post(
     '/upload-teams',
-    authMiddleware,                    // tu JWT middleware
+    tokenTrueFalse,                    // tu JWT middleware
     upload.array('images'),            // 'images' debe coincidir con formData.append("images", ...)
     uploadTeams
 );
