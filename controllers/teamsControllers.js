@@ -1,24 +1,25 @@
 const {connectSQLServer ,mssql}= require('../DB/databaseConfig');
-
-async function getTeams(req, res){
+// En tu backend, donde está el getTeams
+async function getTeams(req, res) {
     try {
-        const pool= await connectSQLServer();
-    const result= await pool.request().query(`SELECT [id]
-      ,[club_name]
-      ,[estadio]
-      ,[logotipo]
-  FROM [SCOREBOARD].[dbo].[clubs]`)
-      
-    if(result.rowsAffected[0]===0)
-    {
-        return res.status(204).json({message:'no hay datos todavia'})
-    }
-    return res.status(200).json({message :'Datos encontrados', result})
+        const pool = await connectSQLServer();
+        const result = await pool.request().query(`
+            SELECT 
+                c.id,
+                c.club_name,
+                c.estadio,
+                c.logotipo,
+                s.nombreStadium    -- ✅ agregamos el nombre
+            FROM dbo.clubs c
+            LEFT JOIN dbo.stadiums s ON c.estadio = s.id_stadium
+        `);
+
+        return res.status(200).json({ result });
     } catch (error) {
-        return res.status(400).json({message:`error parece que algo salio mal ${error.message}`})
+        console.error(error);
+        return res.status(500).json({ message: error.message });
     }
 }
-
 async function getMatchesPlayed(req,res){
 
     try {
