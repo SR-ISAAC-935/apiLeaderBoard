@@ -4,7 +4,7 @@ const router = express.Router();
 const { tokenTrueFalse } = require('../middleware/checkToken');
 const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
-const {getTeams}= require('../controllers/teamsControllers')
+const {getTeams, createMatchPlayed}= require('../controllers/teamsControllers')
 
 router.get('/', tokenTrueFalse, (req, res) => {
     res.json({ message: `Welcome to the leaderboard, ${req.user}!` });
@@ -15,6 +15,6 @@ router.post(
     upload.array('images'),            // 'images' debe coincidir con formData.append("images", ...)
     uploadTeams
 );
-//router.post('/matches-today', tokenTrueFalse, matchestoday);
+router.post('/matches-today', tokenTrueFalse, createMatchPlayed);
 router.get('/getTeams',tokenTrueFalse,getTeams)
 module.exports = router;
