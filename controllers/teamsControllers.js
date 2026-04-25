@@ -31,7 +31,8 @@ async function getMatchesPlayed(req, res) {
     }
 }
 async function createMatchPlayed(req, res) {
-
+console.log("=== createMatchPlayed llamado ===");
+    console.log("body:", req.body);
     try {
         // ✅ season_id y journey vienen UNA SOLA VEZ, no por partido
         const { season_id, journey, partidos } = req.body;
