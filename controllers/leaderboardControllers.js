@@ -29,9 +29,7 @@ async function uploadTeams(req, res) {
         // 3. Esperamos a que todas las imágenes se suban
         const cloudinaryResults = await Promise.all(uploadPromises);
         const teams = Array.isArray(req.body.team) ? req.body.team : [req.body.team];
-       const teams = Array.isArray(req.body.team) ? req.body.team : [req.body.team];
-
-const stadiums = Array.isArray(req.body.stadium) ? req.body.stadium : [req.body.stadium];
+    const stadiums = Array.isArray(req.body.stadium) ? req.body.stadium : [req.body.stadium];
 
 const teamData = {
     team: teams,
