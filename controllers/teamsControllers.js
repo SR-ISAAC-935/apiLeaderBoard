@@ -30,7 +30,7 @@ async function getMatchesPlayed(req,res){
     }
 }
 async function createMatchPlayed(req, res) {
-     const matchesData=[];
+  
     try {
         // ✅ season_id y journey vienen UNA SOLA VEZ, no por partido
         const { season_id, journey, partidos } = req.body;
@@ -81,7 +81,7 @@ async function createMatchPlayed(req, res) {
         console.log("Jornada ID:", journey_id);
 
         // ✅ Paso 2: Construir JSON con el journey_id ya resuelto
-         matchesData = partidos.map(p => ({
+            const matchesData = partidos.map(p => ({
             home_club_id: p.home_club_id,
             away_club_id: p.away_club_id,
             home_score:   p.home_score  ?? 0,
@@ -103,7 +103,7 @@ async function createMatchPlayed(req, res) {
 
     } catch (error) {
         console.error('ERROR:', error);
-        return res.status(500).json({ message: `Algo salió muy mal: ${error.message} ${matchesData}` });
+        return res.status(500).json({ message: `Algo salió muy mal: ${error.message} ` });
     }
 }
 
