@@ -1,4 +1,4 @@
-const {connectSQLServer, mssql} = require('../DB/databaseConfig');
+const { connectSQLServer, mssql } = require('../DB/databaseConfig');
 const { cloudinary, upload } = require('../Helpers/cloudinaryHelper');
 
 async function uploadTeams(req, res) {
@@ -12,7 +12,7 @@ async function uploadTeams(req, res) {
         const uploadPromises = files.map(file => {
             return new Promise((resolve, reject) => {
                 const stream = cloudinary.uploader.upload_stream(
-                    { 
+                    {
                         folder: 'liga_guatemala_teams', // Carpeta en tu Cloudinary
                         resource_type: 'image'
                     },
@@ -20,7 +20,7 @@ async function uploadTeams(req, res) {
                         if (error) return reject(error);
                         resolve(result); // 'result' es donde vive la METADATA
                     }
-                );           
+                );
                 // 2. Enviamos el buffer directamente a la nube
                 stream.end(file.buffer);
             });
@@ -29,39 +29,39 @@ async function uploadTeams(req, res) {
         // 3. Esperamos a que todas las imágenes se suban
         const cloudinaryResults = await Promise.all(uploadPromises);
         const teams = Array.isArray(req.body.team) ? req.body.team : [req.body.team];
-       const teams = Array.isArray(req.body.team) ? req.body.team : [req.body.team];
 
-const stadiums = Array.isArray(req.body.stadium) ? req.body.stadium : [req.body.stadium];
+        const teams = Array.isArray(req.body.team) ? req.body.team : [req.body.team];
+        const stadiums = Array.isArray(req.body.stadium) ? req.body.stadium : [req.body.stadium];
 
-const teamData = {
-    team: teams,
-    stadium: stadiums,
-    images: cloudinaryResults.map(img => img.secure_url)
-};
-        console.log('Datos del equipo a insertar en DB:', teamData);
-        var pool = await connectSQLServer();
-    const result= await Promise.all(
-    teamData.team.map((team, i) => {
-        return pool.request()
-            .input('club_name', mssql.NVarChar(50), team)
-            .input('logotipo', mssql.NVarChar(255), teamData.images[i])
-            .input('estadio', mssql.NVarChar(50), teamData.stadium[i])
-            .query(`
-                INSERT INTO clubs (club_name, logotipo, estadio) 
-                VALUES (@club_name, @logotipo, @estadio)
-            `);
-    }));
-    if(result.some(r => r.rowsAffected[0] === 0)) {
-        return res.status(500).json({ message: 'Error al insertar datos en la base de datos' });
-    }
-    res.status(200).json({
-        message: 'Equipo(s) subido(s) con éxito a Cloudinary y guardado(s) en la base de datos',
-    });
+        const dataForSP = teams.map((team, i) => ({
+            club: team,
+            stadium: stadiums[i],
+            logo: cloudinaryResults[i]?.secure_url || null
+        }));
+
+        const jsonData = JSON.stringify(dataForSP);
+
+        console.log("JSON para SP:", jsonData);
+      const pool = await connectSQLServer();
+
+const result = await pool.request()
+    .input('StadiumClubs', mssql.NVarChar(mssql.MAX), jsonData)
+    .execute('sp_InsertStadiumsAndClubs');
+
+res.status(200).json({
+    message: 'Equipos y estadios guardados correctamente con SP'
+});
+        if (result.some(r => r.rowsAffected[0] === 0)) {
+            return res.status(500).json({ message: 'Error al insertar datos en la base de datos' });
+        }
+        res.status(200).json({
+            message: 'Equipo(s) subido(s) con éxito a Cloudinary y guardado(s) en la base de datos',
+        });
     } catch (error) {
         console.error('Error en Cloudinary Upload:', error);
-        res.status(500).json({ 
-            message: 'Error al procesar las imágenes', 
-            error: error.message 
+        res.status(500).json({
+            message: 'Error al procesar las imágenes',
+            error: error.message
         });
     }
 }
@@ -109,7 +109,7 @@ async function matchestoday(req, res) {
     }
 }
 async function updateLeaderboard(req, res) {
-const matches = req.body;
+    const matches = req.body;
     if (!Array.isArray(matches) || matches.length === 0) {
         return res.status(400).json({ message: 'No matches provided' });
     }
@@ -130,12 +130,12 @@ const matches = req.body;
         const pool = await connectSQLServer();
         const updatePromises = matches.map(async (match) => {
 
-    // LOCAL
-    await pool.request()
-        .input('home_club_id', mssql.Int, match.home_club_id)
-        .input('away_score', mssql.Int, match.away_score)
-        .input('home_score', mssql.Int, match.home_score)
-        .query(`UPDATE clubs set points = points + CASE 
+            // LOCAL
+            await pool.request()
+                .input('home_club_id', mssql.Int, match.home_club_id)
+                .input('away_score', mssql.Int, match.away_score)
+                .input('home_score', mssql.Int, match.home_score)
+                .query(`UPDATE clubs set points = points + CASE 
             WHEN @home_score > @away_score THEN 3
             WHEN @home_score = @away_score THEN 1
             ELSE 0
@@ -152,12 +152,12 @@ const matches = req.body;
             WHEN @home_score < @away_score THEN 1 else 0 end
         WHERE club_id = @home_club_id`);
 
-    // VISITANTE
-    await pool.request()
-        .input('away_club_id', mssql.Int, match.away_club_id)
-        .input('home_score', mssql.Int, match.home_score)
-        .input('away_score', mssql.Int, match.away_score)
-        .query(`UPDATE clubs set points = points + CASE 
+            // VISITANTE
+            await pool.request()
+                .input('away_club_id', mssql.Int, match.away_club_id)
+                .input('home_score', mssql.Int, match.home_score)
+                .input('away_score', mssql.Int, match.away_score)
+                .query(`UPDATE clubs set points = points + CASE 
             WHEN @away_score > @home_score THEN 3
             WHEN @away_score = @home_score THEN 1
             ELSE 0
@@ -173,7 +173,7 @@ const matches = req.body;
         losses = losses + CASE
             WHEN @away_score < @home_score THEN 1 else 0 end
         WHERE club_id = @away_club_id`);
-});
+        });
     } catch (error) {
         console.error('Error updating leaderboard:', error);
         res.status(500).json({ message: 'Error updating leaderboard', error: error.message });

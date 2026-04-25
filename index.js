@@ -4,10 +4,6 @@ const app = express();
 const cookieparser=require('cookie-parser')
 const cookieparser=require('cookie-parser')
 
-const allowedOrigins = [
-  'http://localhost:5173'   // dev
-];
-
 // 🔥 CONFIGURACIÓN CORS
 
 const allowedOrigins = [
@@ -25,17 +21,6 @@ app.use(cors({
   credentials: true,
 }));
 
-
-app.use(cookieparser());
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
-  },
-  credentials: true,
-}));
 
 app.use(cookieparser());
 app.use(express.json()); 
