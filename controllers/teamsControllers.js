@@ -1,24 +1,25 @@
 const {connectSQLServer ,mssql}= require('../DB/databaseConfig');
-
-async function getTeams(req, res){
+// En tu backend, donde está el getTeams
+async function getTeams(req, res) {
     try {
-        const pool= await connectSQLServer();
-    const result= await pool.request().query(`SELECT [id]
-      ,[club_name]
-      ,[estadio]
-      ,[logotipo]
-  FROM [SCOREBOARD].[dbo].[clubs]`)
-      
-    if(result.rowsAffected[0]===0)
-    {
-        return res.status(204).json({message:'no hay datos todavia'})
-    }
-    return res.status(200).json({message :'Datos encontrados', result})
+        const pool = await connectSQLServer();
+        const result = await pool.request().query(`
+            SELECT 
+                c.id,
+                c.club_name,
+                c.estadio,
+                c.logotipo,
+                s.nombreStadium    -- ✅ agregamos el nombre
+            FROM dbo.clubs c
+            LEFT JOIN dbo.stadiums s ON c.estadio = s.id_stadium
+        `);
+
+        return res.status(200).json({ result });
     } catch (error) {
-        return res.status(400).json({message:`error parece que algo salio mal ${error.message}`})
+        console.error(error);
+        return res.status(500).json({ message: error.message });
     }
 }
-
 async function getMatchesPlayed(req,res){
 
     try {
@@ -28,31 +29,64 @@ async function getMatchesPlayed(req,res){
         
     }
 }
-async function createMatchPlayed(req, res){
+async function createMatchPlayed(req, res) {
     try {
-        const{home_club_id, away_club_id,home_score, away_score, match_date, jorney, season}=req.body|null;
-        console.log(req.body);
-        const homeIdClubs= Array.isArray(req.body.home_club_id)? req.body.home_club_id:[req.body.home_club_id]
-        const awayIdClubs=Array.isArray(req.body.awa_club_id)? req.body.away_club_id:[req.body.awa_club_id]
-        const goalsHome=Array.isArray(req.body.home_score)? req.body.home_score:[req.body.home_score]
-        const goalsAway=Array.isArray(req.body.away_score)? req.body.away_score:[req.body.away_score]
-        const match_dates= Array.isArray(req.body.match_date)? req.body.match_date:[req.body.match_date]
-        const journey= Array.isArray(req.body.journey)? req.body.journey:[req.body.journey]
-        const seasons = Array.isArray(req.body.season)? req.body.season:[req.body.season]
-        const  journey_matches={home_club_id:homeIdClubs,
-            away_club_id:awayIdClubs,
-            home_score:goalsHome,
-            away_score:goalsAway,
-            match_date:match_dates,
-            journey:jorney,
-            season:seasons
+        // ❌ req.body|null no funciona en destructuring
+        // ✅ simplemente usa req.body directo
+        const {
+            home_club_id,
+            away_club_id,
+            home_score,
+            away_score,
+            match_date,
+            journey,  // ❌ tenías "jorney" (typo) mezclado con "journey"
+            season
+        } = req.body;
+
+        // ❌ "awa_club_id" typo — faltaba la 'y'
+        const homeIdClubs  = Array.isArray(home_club_id) ? home_club_id  : [home_club_id];
+        const awayIdClubs  = Array.isArray(away_club_id) ? away_club_id  : [away_club_id];
+        const goalsHome    = Array.isArray(home_score)   ? home_score    : [home_score];
+        const goalsAway    = Array.isArray(away_score)   ? away_score    : [away_score];
+        const match_dates  = Array.isArray(match_date)   ? match_date    : [match_date];
+        const journeys     = Array.isArray(journey)      ? journey       : [journey];
+        const seasons      = Array.isArray(season)       ? season        : [season];
+
+        // ✅ Validación antes de continuar
+        if (
+            homeIdClubs.length !== awayIdClubs.length ||
+            homeIdClubs.length !== goalsHome.length   ||
+            homeIdClubs.length !== goalsAway.length   ||
+            homeIdClubs.length !== journeys.length
+        ) {
+            return res.status(400).json({ message: 'Datos inconsistentes entre partidos' });
         }
-        console.log(journey_matches);
-        const pool= await connectSQLServer();
-        const result= await pool.request().query('');
+
+        // ✅ Construir JSON para el SP (igual que hiciste con equipos)
+        const matchesData = homeIdClubs.map((_, i) => ({
+            home_club_id: homeIdClubs[i],
+            away_club_id: awayIdClubs[i],
+            home_score:   goalsHome[i],
+            away_score:   goalsAway[i],
+            match_date:   match_dates[i] || null,
+            journey:      journeys[i],
+            season:       seasons[i]
+        }));
+
+        console.log("Partidos a insertar:", matchesData);
+
+        const jsonData = JSON.stringify(matchesData);
+
+        const pool = await connectSQLServer();
+        await pool.request()
+            .input('MatchesData', mssql.NVarChar(mssql.MAX), jsonData)
+            .execute('sp_InsertMatches'); // ✅ SP igual al patrón que ya usas
+
+        return res.status(200).json({ message: 'Partidos guardados correctamente ✅' });
+
     } catch (error) {
-        
-        return res.status(400).json({message: `algo salio muy mal ${error.message}`})
+        console.error('ERROR:', error);
+        return res.status(500).json({ message: `Algo salió muy mal: ${error.message}` });
     }
 }
 
