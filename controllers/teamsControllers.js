@@ -13,7 +13,7 @@ async function getTeams(req, res){
     {
         return res.status(204).json({message:'no hay datos todavia'})
     }
-    return res.status(200).json({message : result})
+    return res.status(200).json({message :'Datos encontrados', result})
     } catch (error) {
         return res.status(400).json({message:`error parece que algo salio mal ${error.message}`})
     }
