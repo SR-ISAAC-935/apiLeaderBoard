@@ -84,6 +84,8 @@ async function createMatchPlayed(req, res) {
         const matchesData = partidos.map(p => ({
             home_club_id: p.home_club_id,
             away_club_id: p.away_club_id,
+            home_score: p.home_score ?? null,    // ✅ NULL si no existe
+            away_score: p.away_score ?? null,    // ✅ NULL si no existe
             match_date: p.match_date || null,
             journey: journey_id
         }));
