@@ -2,7 +2,7 @@ const express = require('express');
 const cors = require('cors'); // 👈 IMPORTANTE
 const app = express();
 const cookieparser=require('cookie-parser')
-
+const seasonRoutes = require('./routes/seasonRoutes');
 
 // 🔥 CONFIGURACIÓN CORS
 
@@ -34,6 +34,7 @@ const { connectSQLServer } = require('./DB/databaseConfig');
 app.use('/auth', auth);
 app.use('/', responses);
 app.use('/leaderboard', leaderboard);
+app.use('/seasons',seasonRoutes);
 
 // ⚠️ ESTE NO VA COMO MIDDLEWARE
 // app.use(connectSQLServer); ❌
