@@ -80,10 +80,12 @@ async function createMatchPlayed(req, res) {
         const journey_id = jornadaResult.recordset[0].id;
         console.log("Jornada ID:", journey_id);
 
-        // ✅ Paso 2: Construir JSON con el journey_id ya resuelto
+         // ✅ Paso 2: Construir JSON con el journey_id ya resuelto
         const matchesData = partidos.map(p => ({
             home_club_id: p.home_club_id,
             away_club_id: p.away_club_id,
+            home_score: p.home_score ?? null,    // ✅ NULL si no existe
+            away_score: p.away_score ?? null,    // ✅ NULL si no existe
             match_date: p.match_date || null,
             journey: journey_id
         }));
