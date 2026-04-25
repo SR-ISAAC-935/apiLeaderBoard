@@ -1,4 +1,4 @@
-const { uploadTeams,matchestoday } = require('../controllers/leaderboardControllers');
+const { uploadTeams } = require('../controllers/leaderboardControllers');
 const express = require('express');
 const router = express.Router();
 const { tokenTrueFalse } = require('../middleware/checkToken');
@@ -15,6 +15,6 @@ router.post(
     upload.array('images'),            // 'images' debe coincidir con formData.append("images", ...)
     uploadTeams
 );
-router.post('/matches-today', tokenTrueFalse, matchestoday);
+//router.post('/matches-today', tokenTrueFalse, matchestoday);
 router.get('/getTeams',tokenTrueFalse,getTeams)
 module.exports = router;
