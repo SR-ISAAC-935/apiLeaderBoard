@@ -1,6 +1,7 @@
 const express = require('express'); 
 const cors = require('cors'); // 👈 IMPORTANTE
 const app = express();
+const cookieparser=require('cookie-parser')
 
 const allowedOrigins = [
   'http://localhost:5173'   // dev
@@ -17,6 +18,7 @@ app.use(cors({
   credentials: true,
 }));
 
+app.use(cookieparser());
 app.use(express.json()); 
 
 // Rutas
