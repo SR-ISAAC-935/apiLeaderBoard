@@ -50,14 +50,14 @@ res.status(200).json({
     message: 'Equipos y estadios guardados correctamente con SP'
 });
         if (result.some(r => r.rowsAffected[0] === 0)) {
-            return res.status(500).json({ message: 'Error al insertar datos en la base de datos' });
+            return res.status(400).json({ message: 'Error al insertar datos en la base de datos no se pudo procesar' });
         }
         res.status(200).json({
             message: 'Equipo(s) subido(s) con éxito a Cloudinary y guardado(s) en la base de datos',
         });
     } catch (error) {
-        console.error('Error en Cloudinary Upload:', error);
-        res.status(500).json({
+        console.error('Error en Cloudinary Upload:', error.message);
+        res.status(400).json({
             message: 'Error al procesar las imágenes',
             error: error.message
         });
