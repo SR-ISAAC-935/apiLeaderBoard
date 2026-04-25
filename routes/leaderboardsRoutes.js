@@ -8,7 +8,7 @@ const {getTeams}= require('../controllers/teamsControllers')
 router.get('/', tokenTrueFalse, (req, res) => {
     res.json({ message: `Welcome to the leaderboard, ${req.user}!` });
 });
-router.post('/upload-teams', tokenTrueFalse, upload.array('images', 20), uploadTeams);
+router.post('/upload-teams', tokenTrueFalse, upload.array('images',15), uploadTeams);
 router.post('/matches-today', tokenTrueFalse, matchestoday);
 router.get('/getTeams',tokenTrueFalse,getTeams)
 module.exports = router;
