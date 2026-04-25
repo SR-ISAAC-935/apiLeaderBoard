@@ -2,13 +2,19 @@ const { uploadTeams,matchestoday } = require('../controllers/leaderboardControll
 const express = require('express');
 const router = express.Router();
 const { tokenTrueFalse } = require('../middleware/checkToken');
-const { upload } = require('../Helpers/cloudinaryHelper');
+const multer = require('multer');
+const upload = multer({ storage: multer.memoryStorage() });
 const {getTeams}= require('../controllers/teamsControllers')
 
 router.get('/', tokenTrueFalse, (req, res) => {
     res.json({ message: `Welcome to the leaderboard, ${req.user}!` });
 });
-router.post('/upload-teams', tokenTrueFalse, upload.any(), uploadTeams);
+router.post(
+    '/upload-teams',
+    authMiddleware,                    // tu JWT middleware
+    upload.array('images'),            // 'images' debe coincidir con formData.append("images", ...)
+    uploadTeams
+);
 router.post('/matches-today', tokenTrueFalse, matchestoday);
 router.get('/getTeams',tokenTrueFalse,getTeams)
 module.exports = router;
