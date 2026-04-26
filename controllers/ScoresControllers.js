@@ -139,7 +139,7 @@ async function getPositions(req, res) {
     }
 }
 
-async function getPositionsAcumulated(req, res) {
+
     async function getPositionsAcumulated(req, res) {
     try {
         const cacheKey = `acumulada:season:all`;
@@ -192,7 +192,6 @@ async function getPositionsAcumulated(req, res) {
         console.error(error);
         return res.status(500).json({ message: `Error: ${error.message}` });
     }
-}
 }
 module.exports = {
     updateScores
