@@ -139,8 +139,63 @@ async function getPositions(req, res) {
     }
 }
 
+async function getPositionsAcumulated(req, res) {
+    async function getPositionsAcumulated(req, res) {
+    try {
+        const cacheKey = `acumulada:season:all`;
 
+        // 1️⃣ Buscar en Redis primero
+        const cached = await redis.get(cacheKey);
+        if (cached) {
+            console.log('✅ Redis cache hit - acumulada');
+            return res.status(200).json({
+                message: 'Tabla acumulada encontrada',
+                data: cached,
+                source: 'cache'
+            });
+        }
+
+        // 2️⃣ Consultar BD
+        console.log('🔄 Redis cache miss — consultando BD acumulada');
+        const pool = await connectSQLServer();
+        const result = await pool.request()
+            .query(`
+                SELECT 
+                    ta.id,
+                    c.club_name,
+                    c.logotipo,
+                    ta.matches_played,
+                    ta.points,
+                    ta.wins,
+                    ta.draws,
+                    ta.losses,
+                    ta.goals_for,
+                    ta.goals_against,
+                    ta.goals_for - ta.goals_against AS goal_difference
+                FROM dbo.tablaAcumulada ta
+                JOIN dbo.clubs c ON ta.club_id = c.id
+                ORDER BY ta.points DESC, 
+                         (ta.goals_for - ta.goals_against) DESC, 
+                         ta.goals_for DESC
+            `);
+
+        // 3️⃣ Guardar en Redis por 5 minutos
+        await redis.set(cacheKey, result.recordset, { ex: 300 });
+
+        return res.status(200).json({
+            message: 'Tabla acumulada encontrada',
+            data: result.recordset,
+            source: 'database'
+        });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).json({ message: `Error: ${error.message}` });
+    }
+}
+}
 module.exports = {
     updateScores
     , getPositions
+    , getPositionsAcumulated
 };
