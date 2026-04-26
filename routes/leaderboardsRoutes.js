@@ -6,6 +6,9 @@ const multer = require('multer');
 const upload = multer({ storage: multer.memoryStorage() });
 const { createMatchPlayed, getTeams}= require('../controllers/teamsControllers')
 const {updateScores} = require('../controllers/ScoresControllers')
+// En leaderboard router agrega:
+const { getPositions } = require('../controllers/scoresController');
+router.get('/positions/:season_id', tokenTrueFalse, getPositions);
 router.get('/', tokenTrueFalse, (req, res) => {
     res.json({ message: `Welcome to the leaderboard, ${req.user}!` });
 });
