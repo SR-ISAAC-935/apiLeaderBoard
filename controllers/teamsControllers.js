@@ -31,7 +31,7 @@ async function getMatchesPlayed(req, res) {
     }
 }
 async function createMatchPlayed(req, res) {
-console.log("=== createMatchPlayed llamado ===");
+    console.log("=== createMatchPlayed llamado ===");
     console.log("body:", req.body);
     try {
         // ✅ season_id y journey vienen UNA SOLA VEZ, no por partido
@@ -80,9 +80,9 @@ console.log("=== createMatchPlayed llamado ===");
             `);
 
         const journey_id = jornadaResult.recordset[0].id;
-        console.log("Jornada ID:", journey_id);
+        console.log("✅ Paso 1 OK - journey_id:", journey_id);
 
-         // ✅ Paso 2: Construir JSON con el journey_id ya resuelto
+        // ✅ Paso 2: Construir JSON con el journey_id ya resuelto
         const matchesData = partidos.map(p => ({
             home_club_id: p.home_club_id,
             away_club_id: p.away_club_id,
@@ -92,12 +92,13 @@ console.log("=== createMatchPlayed llamado ===");
             journey: journey_id
         }));
 
-        console.log("Partidos a insertar:", matchesData);
+        console.log("✅ Paso 2 OK - matchesData:", JSON.stringify(matchesData));
 
         // ✅ Paso 3: Insertar partidos via SP
         await pool.request()
             .input('MatchesData', mssql.NVarChar(mssql.MAX), JSON.stringify(matchesData))
             .execute('sp_InsertMatches');
+        console.log("✅ Paso 3 OK - SP ejecutado");
 
         return res.status(200).json({
             message: `Jornada ${journey} guardada con ${partidos.length} partidos ✅`,
