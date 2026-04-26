@@ -1,7 +1,7 @@
 // controllers/scoresController.js
 const { connectSQLServer, mssql } = require('../DB/databaseConfig');
 const { redis } = require('../Helpers/redisHelper'); // ✅ Importamos Redis
-const {io} = require('../index'); // ✅ Importamos io para emitir eventos
+const { io } = require('../index'); // ✅ Importamos io para emitir eventos
 async function updateScores(req, res) {
     try {
         const { partidos, season_id } = req.body;
@@ -17,13 +17,13 @@ async function updateScores(req, res) {
         for (let i = 0; i < partidos.length; i++) {
             const p = partidos[i];
             if (!p.id || p.home_score === undefined || p.away_score === undefined) {
-                return res.status(400).json({ 
-                    message: `Partido ${i + 1} tiene datos incompletos` 
+                return res.status(400).json({
+                    message: `Partido ${i + 1} tiene datos incompletos`
                 });
             }
             if (p.home_score < 0 || p.away_score < 0) {
-                return res.status(400).json({ 
-                    message: `Partido ${i + 1}: los goles no pueden ser negativos` 
+                return res.status(400).json({
+                    message: `Partido ${i + 1}: los goles no pueden ser negativos`
                 });
             }
         }
@@ -33,15 +33,34 @@ async function updateScores(req, res) {
         // 1️⃣ Actualizar marcadores en BD
         await pool.request()
             .input('ScoresData', mssql.NVarChar(mssql.MAX), JSON.stringify(partidos.map(p => ({
-                id:         p.id,
+                id: p.id,
                 home_score: p.home_score,
                 away_score: p.away_score
             }))))
             .execute('sp_UpdateScores'); // actualiza matches + recalcula positions
 
-        // ✅ Emite evento a todos los overlays conectados
+        // Después de ejecutar sp_UpdateScores, busca los partidos completos
+        // ✅ Buscar datos completos antes de emitir
+        const ids = req.body.partidos.map(p => p.id).join(',');
+        const partidosCompletos = await pool.request()
+            .query(`
+        SELECT 
+            m.id,
+            m.home_score,
+            m.away_score,
+            local.club_name     AS equipo_local,
+            visitante.club_name AS equipo_visitante,
+            local.logotipo      AS logo_local,
+            visitante.logotipo  AS logo_visitante
+        FROM dbo.matches m
+        JOIN dbo.clubs local     ON m.home_club_id = local.id
+        JOIN dbo.clubs visitante ON m.away_club_id = visitante.id
+        WHERE m.id IN (${ids})
+    `);
+
+        // ✅ Emite con datos completos
         io.emit('score_updated', {
-            partidos,
+            partidos: partidosCompletos.recordset,
             season_id
         });
         console.log('Evento score_updated emitido:', { partidos, season_id });
@@ -73,8 +92,8 @@ async function getPositions(req, res) {
         const cached = await redis.get(cacheKey);
         if (cached) {
             console.log('✅ Redis cache hit');
-            return res.status(200).json({ 
-                message: 'Posiciones encontradas', 
+            return res.status(200).json({
+                message: 'Posiciones encontradas',
                 data: cached,
                 source: 'cache'     // útil para debug
             });
@@ -108,8 +127,8 @@ async function getPositions(req, res) {
         // 3️⃣ Guardar en Redis por 5 minutos
         await redis.set(cacheKey, result.recordset, { ex: 300 });
 
-        return res.status(200).json({ 
-            message: 'Posiciones encontradas', 
+        return res.status(200).json({
+            message: 'Posiciones encontradas',
             data: result.recordset,
             source: 'database'
         });
@@ -121,6 +140,7 @@ async function getPositions(req, res) {
 }
 
 
-module.exports = { updateScores 
+module.exports = {
+    updateScores
     , getPositions
 };
