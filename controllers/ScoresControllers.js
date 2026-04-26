@@ -1,7 +1,7 @@
 // controllers/scoresController.js
 const { connectSQLServer, mssql } = require('../DB/databaseConfig');
-const { redis } = require('../Helpers/redisHelper');
-
+const { redis } = require('../Helpers/redisHelper'); // ✅ Importamos Redis
+const {io} = require('../index'); // ✅ Importamos io para emitir eventos
 async function updateScores(req, res) {
     try {
         const { partidos, season_id } = req.body;
@@ -39,6 +39,12 @@ async function updateScores(req, res) {
             }))))
             .execute('sp_UpdateScores'); // actualiza matches + recalcula positions
 
+        // ✅ Emite evento a todos los overlays conectados
+        io.emit('score_updated', {
+            partidos,
+            season_id
+        });
+        console.log('Evento score_updated emitido:', { partidos, season_id });
         // 2️⃣ Invalidar caché de Redis
         const cacheKey = `positions:season:${season_id}`;
         await redis.del(cacheKey);
