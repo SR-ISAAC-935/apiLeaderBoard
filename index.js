@@ -11,7 +11,7 @@ const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
         origin: [
-            'https://mictlantable.netlify.app/', // dev
+            'https://mictlantable.netlify.app', // dev
         ],
         methods: ['GET', 'POST', 'PUT']
     }
@@ -27,7 +27,7 @@ io.on('connection', (socket) => {
 });
 
 // CORS para HTTP normal
-const allowedOrigins = ['https://mictlantable.netlify.app/'];
+const allowedOrigins = ['https://mictlantable.netlify.app'];
 app.use(cors({
     origin: (origin, callback) => {
         if (!origin || allowedOrigins.includes(origin)) {
