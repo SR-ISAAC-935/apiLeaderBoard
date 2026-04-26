@@ -30,12 +30,12 @@ const auth = require('./routes/auth');
 const responses = require('./routes/responses');
 const leaderboard = require('./routes/leaderboardsRoutes');
 const { connectSQLServer } = require('./DB/databaseConfig');
-
+const matches = require('./routes/matchesRoutes');
 app.use('/auth', auth);
 app.use('/', responses);
 app.use('/leaderboard', leaderboard);
 app.use('/seasons',seasonRoutes);
-
+app.use('/matches',matches);
 // ⚠️ ESTE NO VA COMO MIDDLEWARE
 // app.use(connectSQLServer); ❌
 
