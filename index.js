@@ -27,7 +27,7 @@ io.on('connection', (socket) => {
 });
 
 // CORS para HTTP normal
-const allowedOrigins = ['http://localhost:5173'];
+const allowedOrigins = ['https://mictlantable.netlify.app/'];
 app.use(cors({
     origin: (origin, callback) => {
         if (!origin || allowedOrigins.includes(origin)) {
