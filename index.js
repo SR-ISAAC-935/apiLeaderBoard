@@ -1,46 +1,61 @@
-const express = require('express'); 
-const cors = require('cors'); // 👈 IMPORTANTE
-const app = express();
-const cookieparser=require('cookie-parser')
+const express = require('express');
+const cors = require('cors');
+const http = require('http');
+const { Server } = require('socket.io'); // ✅ typo corregido
+const cookieparser = require('cookie-parser');
 const seasonRoutes = require('./routes/seasonRoutes');
 
-// 🔥 CONFIGURACIÓN CORS
+const app = express();
+const server = http.createServer(app);
 
-const allowedOrigins = [
-  'http://localhost:5173'   // dev
-];
-
-app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
+const io = new Server(server, {
+    cors: {
+        origin: [
+            'http://localhost:5173', // dev
+        ],
+        methods: ['GET', 'POST', 'PUT']
     }
-  },
-  credentials: true,
+});
+
+module.exports = { io }; // ✅ export nombrado
+
+io.on('connection', (socket) => {
+    console.log(`🟢 Cliente conectado: ${socket.id}`);
+    socket.on('disconnect', () => {
+        console.log(`🔴 Cliente desconectado: ${socket.id}`);
+    });
+});
+
+// CORS para HTTP normal
+const allowedOrigins = ['http://localhost:5173'];
+app.use(cors({
+    origin: (origin, callback) => {
+        if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+        } else {
+            callback(new Error('Not allowed by CORS'));
+        }
+    },
+    credentials: true,
 }));
 
-
 app.use(cookieparser());
-app.use(express.json()); 
+app.use(express.json());
 
 // Rutas
 const auth = require('./routes/auth');
 const responses = require('./routes/responses');
 const leaderboard = require('./routes/leaderboardsRoutes');
-const { connectSQLServer } = require('./DB/databaseConfig');
 const matches = require('./routes/matchesRoutes');
+
 app.use('/auth', auth);
 app.use('/', responses);
 app.use('/leaderboard', leaderboard);
-app.use('/seasons',seasonRoutes);
-app.use('/matches',matches);
-// ⚠️ ESTE NO VA COMO MIDDLEWARE
-// app.use(connectSQLServer); ❌
+app.use('/seasons', seasonRoutes);
+app.use('/matches', matches);
 
-// Servidor
+// ✅ server.listen en vez de app.listen
 const port = process.env.PORT || 3000;
-app.listen(port, () => {
-    console.log(`🚀 Server running`);
+server.listen(port, () => {
+    console.log(`🚀 Server running on port ${port}`);
 });
